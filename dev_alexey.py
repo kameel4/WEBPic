@@ -26,3 +26,5 @@ while pygame.event.wait().type != pygame.QUIT:
 pygame.quit()
 
 os.remove(map_file)
+
+# fdsfsdagdsgads
