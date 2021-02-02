@@ -76,3 +76,5 @@ if __name__ == '__main__':
         screen.fill((0, 0, 0))
     pygame.quit()
     os.remove(map_file)
+
+# bad comment
