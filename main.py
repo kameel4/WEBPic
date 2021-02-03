@@ -40,7 +40,8 @@ def get_coords(json):
 
 def get_pic(mp="map"):
     global map_file, scale, longitude, latitude
-    map_request = f"http://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&spn={scale},{scale}&l={mp}"
+    pts = f"&pt={longitude},{latitude},pm2bll"
+    map_request = f"http://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&spn={scale},{scale}&l={mp}"+pts
     response = requests.get(map_request)
 
     if not response:
@@ -93,7 +94,8 @@ def change_coords(event):
             "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
             "geocode": toponym_to_find,
             "format": "json",
-            "l": my_map
+            "l": my_map,
+            "pt": f"{longitude},{latitude},pm2bll",
         }
 
         response = requests.get(geocoder_api_server, params=geocoder_params)
@@ -109,14 +111,11 @@ def change_coords(event):
         toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
         longitude, latitude = float(toponym_longitude), float(toponym_lattitude)
 
-        delta = "0.005"
-        scale = 0.05
-
         map_params = {
             "ll": ",".join([toponym_longitude, toponym_lattitude]),
-            "spn": ",".join([delta, delta]),
+            "spn": ",".join([str(scale), str(scale)]),
             "l": my_map,
-            "bbox": get_coords(json_responses),
+            "pt": f"{longitude},{latitude},pm2bll"
         }
 
         map_api_server = "http://static-maps.yandex.ru/1.x/"
@@ -171,6 +170,7 @@ if __name__ == '__main__':
                         color = "grey"
                 elif event.pos[0] <= 532 and event.pos[1] <= 25:
                     finded = True
+                    color = "grey"
                     change_coords(event)
                 elif event.pos[0] > 532 and event.pos[1] <= 25:
                     if my_map == "map":
