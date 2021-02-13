@@ -207,11 +207,12 @@ if __name__ == '__main__':
                         my_map = "map"
                     finded = True
                     change_coords(event)
-                elif event.pos[1] > 475:
+                elif event.pos[1] > 475 < 505:
                     point = False
                     finded = True
                     color = "grey"
                     textochek = ""
+                    currentAdress = ""
                     change_coords(event)
 
         if color == "grey":
