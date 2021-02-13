@@ -4,6 +4,8 @@ import sys
 import pygame
 import requests
 
+#  жесть, одна переменная одинокая сидит...
+point = True
 
 def get_coords(json):
     try:
@@ -39,8 +41,11 @@ def get_coords(json):
 
 
 def get_pic(mp="map"):
-    global map_file, scale, longitude, latitude
-    pts = f"&pt={longitude},{latitude},pm2bll"
+    global map_file, scale, longitude, latitude, point
+    if point:
+        pts = f"&pt={longitude},{latitude},pm2bll"
+    else:
+        pts = f"&pt={longitude + 999},{latitude + 999},pm2bll"
     map_request = f"http://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&spn={scale},{scale}&l={mp}"+pts
     response = requests.get(map_request)
 
@@ -56,7 +61,7 @@ def get_pic(mp="map"):
 
 
 def change_coords(event):
-    global scale, longitude, latitude, k, finded, textochek, my_map
+    global scale, longitude, latitude, k, finded, textochek, my_map, point
     if not finded:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_PAGEDOWN:
             if scale >= 6:
@@ -90,13 +95,21 @@ def change_coords(event):
 
         geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
-        geocoder_params = {
-            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
-            "geocode": toponym_to_find,
-            "format": "json",
-            "l": my_map,
-            "pt": f"{longitude},{latitude},pm2bll",
-        }
+        if point:
+            geocoder_params = {
+                "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+                "geocode": toponym_to_find,
+                "format": "json",
+                "l": my_map,
+                "pt": f"{longitude},{latitude},pm2bll",
+            }
+        else:
+            geocoder_params = {
+                "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+                "geocode": toponym_to_find,
+                "format": "json",
+                "l": my_map,
+            }
 
         response = requests.get(geocoder_api_server, params=geocoder_params)
 
@@ -111,12 +124,19 @@ def change_coords(event):
         toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
         longitude, latitude = float(toponym_longitude), float(toponym_lattitude)
 
-        map_params = {
-            "ll": ",".join([toponym_longitude, toponym_lattitude]),
-            "spn": ",".join([str(scale), str(scale)]),
-            "l": my_map,
-            "pt": f"{longitude},{latitude},pm2bll"
-        }
+        if point:
+            map_params = {
+                "ll": ",".join([toponym_longitude, toponym_lattitude]),
+                "spn": ",".join([str(scale), str(scale)]),
+                "l": my_map,
+                "pt": f"{longitude},{latitude},pm2bll"
+            }
+        else:
+            map_params = {
+                "ll": ",".join([toponym_longitude, toponym_lattitude]),
+                "spn": ",".join([str(scale), str(scale)]),
+                "l": my_map,
+            }
 
         map_api_server = "http://static-maps.yandex.ru/1.x/"
         response = requests.get(map_api_server, params=map_params)
@@ -137,7 +157,7 @@ if __name__ == '__main__':
     get_pic()
     pygame.init()
     pygame.display.set_caption('map')
-    size = width, height = 600, 475
+    size = width, height = 600, 505
     screen = pygame.display.set_mode(size)
     textochek = ''
     color = "grey"
@@ -170,6 +190,7 @@ if __name__ == '__main__':
                         color = "grey"
                 elif event.pos[0] <= 532 and event.pos[1] <= 25:
                     finded = True
+                    point = True
                     color = "grey"
                     change_coords(event)
                 elif event.pos[0] > 532 and event.pos[1] <= 25:
@@ -181,6 +202,12 @@ if __name__ == '__main__':
                         my_map = "map"
                     finded = True
                     change_coords(event)
+                elif event.pos[1] > 475:
+                    point = False
+                    finded = True
+                    color = "grey"
+                    textochek = ""
+                    change_coords(event)
 
         if color == "grey":
             pygame.draw.rect(screen, (204, 204, 204), (0, 0, 460, 30))
@@ -190,6 +217,7 @@ if __name__ == '__main__':
         pygame.draw.rect(screen, (104, 139, 176), (462, 0, 68, 30))
         pygame.draw.rect(screen, (163, 198, 192), (530, 0, 2, 30))
         pygame.draw.rect(screen, (104, 139, 176), (532, 0, 68, 30))
+        pygame.draw.rect(screen, (104, 139, 176), (0, 475, 600, 505))
 
         font = pygame.font.Font("19889.ttf", 20)
         text = font.render(
@@ -198,18 +226,23 @@ if __name__ == '__main__':
             center=(496, 15))
         screen.blit(text, place)
 
-        font = pygame.font.Font("19889.ttf", 20)
         text = font.render(
             "Map", True, (255, 255, 255))
         place = text.get_rect(
             center=(566, 15))
         screen.blit(text, place)
 
+        text = font.render(
+            "resetting the search result", True, (255, 255, 255))
+        place = text.get_rect(
+            center=(300, 492))
+        screen.blit(text, place)
+
         input_font = pygame.font.SysFont(None, 16)
         input_text = font.render(
             textochek, True, (5, 5, 5))
         place = text.get_rect(
-            center=(20, 15))
+            center=(170, 15))
         screen.blit(input_text, place)
 
         screen.blit(pygame.image.load(map_file), (0, 25))
@@ -217,5 +250,3 @@ if __name__ == '__main__':
         screen.fill((0, 0, 0))
     pygame.quit()
     os.remove(map_file)
-
-# bad comment
