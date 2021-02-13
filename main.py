@@ -3,9 +3,12 @@ import sys
 
 import pygame
 import requests
+import googletrans
 
-#  жесть, одна переменная одинокая сидит...
+#  ура теперь поинт не одинока!
 point = True
+currentAdress = ""
+
 
 def get_coords(json):
     try:
@@ -46,7 +49,7 @@ def get_pic(mp="map"):
         pts = f"&pt={longitude},{latitude},pm2bll"
     else:
         pts = f"&pt={longitude + 999},{latitude + 999},pm2bll"
-    map_request = f"http://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&spn={scale},{scale}&l={mp}"+pts
+    map_request = f"http://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&spn={scale},{scale}&l={mp}" + pts
     response = requests.get(map_request)
 
     if not response:
@@ -61,7 +64,7 @@ def get_pic(mp="map"):
 
 
 def change_coords(event):
-    global scale, longitude, latitude, k, finded, textochek, my_map, point
+    global scale, longitude, latitude, k, finded, textochek, my_map, point, currentAdress
     if not finded:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_PAGEDOWN:
             if scale >= 6:
@@ -120,6 +123,7 @@ def change_coords(event):
         json_responses = response.json()
         toponym = json_responses["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
+        currentAdress = toponym['metaDataProperty']['GeocoderMetaData']['text']
         toponym_coodrinates = toponym["Point"]["pos"]
         toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
         longitude, latitude = float(toponym_longitude), float(toponym_lattitude)
@@ -157,7 +161,7 @@ if __name__ == '__main__':
     get_pic()
     pygame.init()
     pygame.display.set_caption('map')
-    size = width, height = 600, 505
+    size = width, height = 600, 545
     screen = pygame.display.set_mode(size)
     textochek = ''
     color = "grey"
@@ -169,6 +173,7 @@ if __name__ == '__main__':
     running = True
 
     while running:
+        font = pygame.font.Font("19889.ttf", 20)
         for event in pygame.event.get():
             # print(event)
             if event.type == pygame.QUIT:
@@ -218,6 +223,7 @@ if __name__ == '__main__':
         pygame.draw.rect(screen, (163, 198, 192), (530, 0, 2, 30))
         pygame.draw.rect(screen, (104, 139, 176), (532, 0, 68, 30))
         pygame.draw.rect(screen, (104, 139, 176), (0, 475, 600, 505))
+        pygame.draw.rect(screen, (200, 200, 200), (0, 505, 600, 550))
 
         font = pygame.font.Font("19889.ttf", 20)
         text = font.render(
@@ -225,6 +231,21 @@ if __name__ == '__main__':
         place = text.get_rect(
             center=(496, 15))
         screen.blit(text, place)
+
+        text = font.render(
+            "Current adress:", True, (0, 0, 0))
+        place = text.get_rect(
+            center=(90, 515))
+        screen.blit(text, place)
+
+        if currentAdress:
+            translator = googletrans.Translator()
+            result = translator.translate(currentAdress)
+            text = font.render(
+                result.text, True, (0, 0, 0))
+            place = text.get_rect(
+                center=(300, 535))
+            screen.blit(text, place)
 
         text = font.render(
             "Map", True, (255, 255, 255))
